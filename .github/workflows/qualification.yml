@@ -1,0 +1,20 @@
+name: qualification
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  host:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        sanitize: ['OFF', 'ON']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: python3 tools/fetch_deps.py
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DSQLITE_LITTLEFS_SANITIZE=${{ matrix.sanitize }}
+      - run: cmake --build build --parallel
+      - run: ctest --test-dir build --output-on-failure
