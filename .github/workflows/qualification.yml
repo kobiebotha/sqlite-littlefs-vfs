@@ -10,11 +10,23 @@ jobs:
         sanitize: ['OFF', 'ON']
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
       - run: python3 tools/fetch_deps.py
-      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DSQLITE_LITTLEFS_SANITIZE=${{ matrix.sanitize }}
+      - run: >-
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          -DSQLITE_LITTLEFS_SANITIZE=${{ matrix.sanitize }}
+          -DSQLITE_LITTLEFS_CRASH_TIMEOUT=${{ matrix.sanitize == 'ON' && '3600' || '900' }}
       - run: cmake --build build --parallel
       - run: ctest --test-dir build --output-on-failure
+      - name: Preserve CTest failure logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ctest-${{ matrix.os }}-sanitize-${{ matrix.sanitize }}
+          path: |
+            build/Testing/Temporary/LastTest.log
+            build/Testing/Temporary/LastTestsFailed.log
+          if-no-files-found: warn

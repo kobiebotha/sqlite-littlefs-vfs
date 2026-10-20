@@ -44,6 +44,10 @@ ctest --test-dir build --output-on-failure
 ```
 
 The recovery matrix can take several minutes, especially with sanitizers.
+The crash test timeout defaults to 900 seconds, or 3,600 seconds in a fresh
+sanitizer build. Override the CMake cache setting with
+`-DSQLITE_LITTLEFS_CRASH_TIMEOUT=3600` when reconfiguring an existing build.
+The timeout does not reduce the fault matrix.
 For just the API checks, use `ctest --test-dir build -R api --output-on-failure`.
 To compile for Cortex-M33 using an installed Arm GNU toolchain, run
 `sh tools/check_freestanding.sh`; this compiles objects and does not flash or

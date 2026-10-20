@@ -54,6 +54,29 @@ The library-only CMake consumer build passes. Adapter, example, SQLite, and
 LittleFS also compile as freestanding Cortex-M33 objects with Arm GNU 13.2.Rel1.
 That check does not link or execute firmware.
 
+## Initial GitHub Actions timing
+
+At commit `c8ad5f5a290f141f4b3fb2a91dfec400e878f3d0`,
+[run 39342503436](https://github.com/kobiebotha/sqlite-littlefs-vfs/actions/runs/39342503436)
+passed Linux with and without sanitizers and macOS without sanitizers. The
+macOS sanitizer build succeeded, then its CTest step failed with exit code 8
+after 906 seconds (23:35:57–23:51:03 UTC on 2026-10-19). The passing CTest steps
+took 79 seconds on Linux without sanitizers, 398 seconds on Linux with
+sanitizers, and 131 seconds on macOS without sanitizers.
+
+The 906-second duration closely matches the original 900-second crash-test
+limit plus API-test overhead, so timeout is the likely cause. This remains an
+inference: the unauthenticated job-log API returned HTTP 403, and the public
+check annotations did not include the detailed CTest result. It is not evidence
+of a sanitizer finding or a passing macOS sanitizer CI run. The same Debug
+sanitizer matrix passed locally in 527 seconds, as recorded above.
+
+CI now allows 3,600 seconds for the full sanitizer crash matrix, retains the
+900-second normal limit, and uploads CTest failure logs. No cases are skipped.
+The timeout settings were checked by configuring both profiles and inspecting
+CTest's generated test properties; the remote matrix must run again to confirm
+the outcome.
+
 ## Regression captured
 
 A partial device write followed by an I/O error originally let SQLite retry
